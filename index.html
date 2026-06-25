@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《如果》· 体验版</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  :root{--bg:#0e0f17;--ink:#e8e9f0;--dim:#9aa0b5;--gold:#e8c178;--line:#a8c0ff;--card:#1a1c28;}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang SC",sans-serif;
+    display:flex;justify-content:center;min-height:100vh;}
+  #app{width:100%;max-width:440px;min-height:100vh;background:linear-gradient(180deg,#0e0f17,#141622);
+    display:flex;flex-direction:column;position:relative;box-shadow:0 0 60px rgba(0,0,0,.5);}
+  .topbar{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;
+    border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;
+    background:rgba(14,15,23,.92);backdrop-filter:blur(10px);z-index:20;}
+  .age{font-size:13px;color:var(--gold);letter-spacing:1px;font-weight:600;}
+  .era{font-size:12px;color:var(--dim);}
+  .tree-btn{font-size:12px;color:var(--line);border:1px solid rgba(168,192,255,.3);
+    padding:5px 11px;border-radius:14px;cursor:pointer;transition:.18s;}
+  .tree-btn:hover{background:rgba(168,192,255,.12);}
+  #stream{flex:1;padding:20px 18px 150px;overflow-y:auto;}
+  .narr{font-size:15px;line-height:1.95;margin-bottom:20px;opacity:0;transform:translateY(8px);
+    animation:fadeUp .6s ease forwards;}
+  .narr.dim{color:var(--dim);font-size:14px;}
+  .yeartag{display:inline-block;font-size:11px;color:var(--gold);letter-spacing:1px;
+    border-left:2px solid var(--gold);padding-left:8px;margin:6px 0 14px;opacity:.85;}
+  @keyframes fadeUp{to{opacity:1;transform:none;}}
+  @keyframes pulse-dim{0%,100%{opacity:.4}50%{opacity:.8}}
+  .event{background:var(--card);border:1px solid rgba(232,193,120,.28);border-radius:16px;
+    padding:18px;margin:8px 0 20px;opacity:0;animation:fadeUp .6s ease forwards;
+    box-shadow:0 8px 30px rgba(0,0,0,.3);}
+  .event .ico{font-size:24px;margin-bottom:10px;}
+  .event .etitle{font-size:13px;color:var(--gold);letter-spacing:1px;margin-bottom:8px;}
+  .event .ebody{font-size:14.5px;line-height:1.85;}
+  .event .open-btn{margin-top:14px;display:inline-block;padding:9px 18px;border-radius:20px;
+    background:rgba(232,193,120,.16);border:1px solid rgba(232,193,120,.5);color:var(--gold);
+    font-size:13px;cursor:pointer;transition:.18s;}
+  .event .open-btn:hover{background:rgba(232,193,120,.28);}
+  .future-tag{font-size:11px;color:rgba(154,160,181,.5);margin:-4px 0 18px;font-style:italic;}
+  .future-deny{font-size:14px;color:var(--gold);letter-spacing:1px;line-height:1.9;
+    margin:8px 0 18px;opacity:0;transform:translateY(6px);transition:.7s ease;
+    font-family:"Songti SC","SimSun",serif;}
+  .future-deny.show{opacity:.95;transform:none;}
+  .correct-link{font-size:12px;color:rgba(168,192,255,.55);cursor:pointer;
+    margin:-6px 0 18px;display:inline-block;border-bottom:1px dashed rgba(168,192,255,.3);}
+  .correct-link:hover{color:var(--line);}
+  #decision{position:fixed;left:0;right:0;bottom:0;z-index:30;max-width:440px;margin:0 auto;
+    background:linear-gradient(0deg,#11131e 80%,rgba(17,19,30,.96));border-top:1px solid rgba(232,193,120,.3);
+    padding:18px 18px 22px;transform:translateY(110%);transition:transform .45s cubic-bezier(.22,.61,.36,1);
+    border-radius:20px 20px 0 0;max-height:80vh;overflow-y:auto;}
+  #decision.show{transform:none;}
+  .d-prompt{font-size:13px;color:var(--dim);margin-bottom:4px;}
+  .d-q{font-size:16px;line-height:1.7;margin-bottom:16px;}
+  .opt{padding:14px 16px;border-radius:13px;background:rgba(255,255,255,.05);
+    border:1px solid rgba(168,192,255,.2);font-size:14px;line-height:1.5;cursor:pointer;
+    transition:.18s;margin-bottom:10px;}
+  .opt:hover{background:rgba(168,192,255,.14);border-color:rgba(168,192,255,.5);transform:translateX(3px);}
+  .opt .sub{display:block;font-size:11.5px;color:var(--dim);margin-top:4px;}
+  #tree{position:fixed;inset:0;max-width:440px;margin:0 auto;background:rgba(8,9,14,.97);
+    z-index:40;padding:20px 18px;transform:translateX(100%);transition:transform .4s;overflow-y:auto;}
+  #tree.show{transform:none;}
+  #tree h3{font-size:15px;color:var(--gold);margin-bottom:4px;}
+  #tree .hint{font-size:12px;color:var(--dim);margin-bottom:18px;line-height:1.6;}
+  #tree .close{position:absolute;top:18px;right:18px;color:var(--dim);font-size:20px;cursor:pointer;}
+  .node{display:flex;gap:12px;margin-bottom:2px;cursor:pointer;border-radius:10px;padding:10px;transition:.15s;}
+  .node:hover{background:rgba(168,192,255,.08);}
+  .node .dot{flex-shrink:0;width:12px;height:12px;border-radius:50%;background:var(--line);
+    margin-top:4px;position:relative;}
+  .node .dot::after{content:'';position:absolute;left:50%;top:14px;width:2px;height:26px;
+    background:rgba(168,192,255,.25);transform:translateX(-50%);}
+  .node:last-child .dot::after{display:none;}
+  .node.current .dot{background:var(--gold);box-shadow:0 0 10px var(--gold);}
+  .node .nage{font-size:12px;color:var(--gold);}
+  .node .nchoice{font-size:13.5px;margin-top:2px;}
+  .node .nback{font-size:11px;color:var(--line);margin-top:3px;opacity:0;transition:.15s;}
+  .node:hover .nback{opacity:1;}
+  #intro{position:fixed;inset:0;max-width:440px;margin:0 auto;background:#0e0f17;z-index:60;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px;
+    text-align:center;transition:opacity .8s;}
+  #intro h1{font-size:34px;letter-spacing:8px;color:var(--gold);margin-bottom:20px;
+    font-family:"Songti SC","SimSun",serif;}
+  #intro p{font-size:14px;color:var(--dim);line-height:2;margin-bottom:8px;}
+  #intro .start{margin-top:34px;padding:12px 34px;border-radius:24px;background:transparent;
+    border:1px solid var(--gold);color:var(--gold);font-size:15px;letter-spacing:2px;cursor:pointer;
+    transition:.2s;}
+  #intro .start:hover{background:rgba(232,193,120,.14);}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div><span class="age" id="ageLabel">0 岁</span><span class="era" id="eraLabel"></span></div>
+    <div class="tree-btn" id="openTree">⌖ 人生树</div>
+  </div>
+  <div id="stream"></div>
+  <div id="decision">
+    <div class="d-prompt">这一步，你怎么走？</div>
+    <div class="d-q" id="dQ"></div>
+    <div id="dOpts"></div>
+  </div>
+  <div id="tree">
+    <span class="close" id="closeTree">✕</span>
+    <h3>⌖ 你的人生树</h3>
+    <div class="hint">每一个岔路，都是一次"如果"。点亮任意一个，回到那年那月，换一种活法，长出另一段人生。</div>
+    <div id="treeBody"></div>
+  </div>
+  <div id="intro">
+    <h1>如 果</h1>
+    <p>这一生，你本可以有许多种活法。</p>
+    <p>如果当初，某一步换个走法——</p>
+    <p>会长出怎样不一样的人生？</p>
+    <button class="start" id="startBtn">开 始</button>
+    <p style="margin-top:30px;font-size:11px;opacity:.5">体验版 · 以一位 1994 年生人的一生为样本</p>
+  </div>
+</div>
+<script>
+/* ===== 《如果》离线体验版 · 单文件零依赖 ===== */
+const PLAYER={birthYear:1994,place:'山东省德州市齐河县赵官镇付庄村',
+  family:'北方农村家庭，靠种地和打零工，经济一般'};
+const REALITY_YEAR=new Date().getFullYear();
+
+// 路口骨架
+const NODES=[
+ {age:7,type:'生命',icon:'🎒',title:'开学那年',q:'要去上学吗？',open:'看看眼前的光景',
+  opts:[{t:'背上书包去上学',sub:'识文断字，可学费是一份负担',key:'入学'},{t:'先在家帮着干活',sub:'家里缺人手，念书的事往后放放',key:'晚学'}]},
+ {age:15,type:'时代',icon:'📡',title:'中考之后',q:'十五岁的你，怎么选？',open:'看看眼前的光景',
+  opts:[{t:'念高中，搏一个大学',sub:'改换门庭最直的路，却要熬上三年',key:'高中'},{t:'读职校学门手艺',sub:'一技傍身，早些能挣钱',key:'职校'},{t:'不念了，出去打工',sub:'眼下就有进项，前路也就此定了',key:'打工'}]},
+ {age:18,type:'生命',icon:'📖',title:'十八岁那年夏天',q:'这条路，你怎么走？',open:'看看眼前的光景',
+  opts:[{t:'去大城市，闯一闯',sub:'离了乡，见世面，花销也大',key:'进城'},{t:'求一份安稳',sub:'离家近些，图个踏实',key:'求稳'},{t:'认准一行，扎下去',sub:'趁年轻，赌一个将来',key:'专精'}]},
+ {age:23,type:'生命',icon:'💼',title:'初入社会',q:'第一份立身的活计，怎么选？',open:'看看眼前的光景',
+  opts:[{t:'进城打拼，去大公司',sub:'机会多，可立足难，房租压人',key:'闯荡'},{t:'回乡或就近，求安稳',sub:'守着家，钱少些，心里踏实',key:'安稳'},{t:'自己干，搏一把',sub:'不愿替人打工，宁可冒险',key:'自立'}]},
+ {age:27,type:'生命',icon:'🏮',title:'到了谈婚论嫁的年纪',q:'这桩人生大事，怎么定？',open:'看看眼前的光景',
+  opts:[{t:'安定下来，成家',sub:'到了年纪，找个人好好过日子',key:'成家'},{t:'再缓缓，先立业',sub:'觉得自己还没准备好',key:'缓婚'},{t:'随缘，不强求',sub:'顺其自然，不为催促所动',key:'随缘'}]},
+ {age:32,type:'时代',icon:'🏙️',title:'三十出头的当口',q:'人到中途，你怎么走？',open:'看看眼前的光景',
+  opts:[{t:'求稳，守好眼前',sub:'上有老下有小，输不起了',key:'守成'},{t:'再拼一次，换个活法',sub:'不甘心就这样下去',key:'再搏'},{t:'回乡，过慢一点的日子',sub:'倦了城里的奔忙',key:'归乡'}]},
+ {age:38,type:'生命',icon:'🌗',title:'人到中年',q:'这一程，会怎么走？',open:'望向尚未到来的日子',future:true,
+  opts:[{t:'稳住，守着这个家',sub:'求一份安稳长久',key:'守家'},{t:'趁还来得及，再变一次',sub:'人生下半场，不想认命',key:'求变'}]},
+ {age:50,type:'生命',icon:'🍂',title:'知天命之年',q:'这一段晚来的光阴，怎么过？',open:'望向尚未到来的日子',future:true,
+  opts:[{t:'含饴弄孙，安度',sub:'忙了半生，该歇歇了',key:'安度'},{t:'重拾年轻时的念想',sub:'了却一桩未完的心愿',key:'了愿'}]},
+ {age:65,type:'生命',icon:'🌅',title:'暮年回望',q:'回望这一生，你作何感想？',open:'望向尚未到来的日子',future:true,
+  opts:[{t:'此生足矣',sub:'平凡，但也圆满',key:'知足'},{t:'仍有遗憾',sub:'有些路，终究没能走',key:'遗憾'}]},
+];
+
+// 焙入的真实生成文字
+const BAKED={
+  "scenes": {
+    "7": "麦收刚过，父亲蹲在院里算账，化肥种子的赊欠条压在搪瓷缸底，母亲把镇上小学的学费数目念了两遍，风吹得院墙上的杨树叶沙沙作响。你站在堂屋门槛上，书包是表哥用旧的，带着洗不净的蓝墨水印。",
+    "15": "麦田尽头的县道上，拉砖的农用车扬起白灰，你坐在院里翻看那张齐河三中的录取通知，母亲在灶房没有说话，父亲的蛇皮袋还靠在门框上，天津工地的泥点子尚未干透。",
+    "18": "麦收后的六月，县中教学楼走廊里贴满了大专与技校的招生简章，你站在那里，兜里揣着父亲卖粮后转来的一千二百块钱，手中那部山寨触屏手机正推送着青岛、苏州电子厂的暑期招工信息。",
+    "23": "春末的风裹着麦田青气吹过镇上新修的水泥路，你攥着手机刷过一屏又一屏招工信息，身后老屋里母亲正把去年腌的咸菜翻出来晾晒，仿佛日子还能照旧过下去。",
+    "27": "腊月里母亲在电话那头念叨邻村谁家的闺女不错，你站在租住的隔断房窗前，楼下是异乡城市万家将熄的灯火，手边烟灰缸已满，而故乡麦田里那条回家相亲的路，似乎比年少离开时更窄了几分。",
+    "32": "三十二岁的春天，鲁北平原上麦苗已返青，你在县城出租屋的窗前看见远处吊塔缓缓转动，手机里攒下的积蓄数目不多不少，恰够一次孤注，也恰够维持眼下不动声色的日子。",
+    "38": "三十八岁的春天，父亲的咳疾反复未愈，县医院的单据攒了半沓，儿女的学费与房贷月供像两把钝锯，你坐在出租屋阳台的塑料凳上，膝上摊着一包没拆的烟，楼下的城市车流不息，忽然觉得肩上的沉与少年时扛麦袋的沉，终究不是同一种重量。",
+    "50": "麦收过后的黄昏，你坐在老院槐树下，听见屋内母亲咳嗽声隔墙传来，手机里儿女的城市灯火明灭如隔世——五十年光阴走过，身后的村庄比你记忆中更矮更静了。",
+    "65": "暮春的麦田青了又黄了六十五遭，你坐在老屋檐下，风把杨树的絮送过来，落在膝上那双合拢的、指节粗粝的手背上，村路尽头的光影明灭如一生翻过的日历。"
+  },
+  "narrations": {
+    "7:入学": "二〇〇一年九月，你背上母亲在齐河县城集市上买的蓝色尼龙书包，走过村东那条土路，到赵官镇小学报到。书包里装着两支铅笔、一块半截的橡皮和几个薄本子，父亲前一晚用粗糙的手指替你削好了笔尖。学费是开春卖粮后攒下的，母亲用手绢包着零碎的票子交到老师手中，没有多说什么。教室是平房，冬天生煤炉，窗玻璃有一块碎了用塑料纸糊着。你和村里几个同龄的孩子坐在同一条长凳上，开始学认字。\n\n你并不特别聪慧，也不特别愚钝，成绩在班里居于中游偏上。放学回家要走二十多分钟的路，书包拍打后背，路边是秋收后光秃秃的玉米茬子。到家放下书包，还要帮着喂鸡、剥花生，天黑前在昏黄灯泡下写完作业。日子就这样一天一天过，像平原上笔直的公路，看不出起伏，但毕竟是往前走着的。那年头镇上念书的孩子，大多也就是这样——能念下去，便先念着。",
+    "7:晚学": "你没有在九月准时坐进那间教室。母亲需要人搭把手，秋收的玉米棒子堆在院里等着剥，鸡要喂，猪食要拌，你便留下了。七岁的孩子在北方农村算半个劳力，至少能递个簸箕、看住灶上的火。父亲在外头给人砌墙，一天二十几块钱，顾不上多想你晚一年上学的事。村里这样的孩子不止你一个，没人觉得有什么不对。\n\n你跟着母亲的节奏过了一整年。冬天铡草时你扶着草把，开春往地里送粪时你蹲在三轮车斗里压住编织袋。手上的冻疮裂了又好，好了入冬又裂。你认得了节气，知道什么时候该浇返青水，却还不认得几个字。偶尔路过小学校墙根，听见里头的读书声，你也不觉得那是被拿走的东西——七岁的你尚无从判断失去与拥有的分量。\n\n晚一年，终归还是要去的。但这一年在你身上留下了某种底色：你比同龄人更习惯沉默和劳作，也更早地明白光阴是能被掰开用在不同地方的。至于那被掰走的一截，日后是否会在某处显出缺口，此刻尚无人知晓。",
+    "15:高中": "二〇〇九年夏天，你拿到齐河一中的录取通知书。父亲在院子里蹲着抽烟没说话，母亲把通知书翻来覆去看了两遍，最后说了句\"供你念\"。村里同龄人已经有一半去了天津或青岛的厂子，你坐上去县城的班车时，车窗外是刚收完麦子的平原，黄扑扑的光从地平线一直铺到路尽头。高中三年，你住八人间宿舍，吃三块五的饭，每月生活费由母亲从镇上邮政储蓄汇来。你不算最聪明的那种学生，但也不至于跟不上——成绩在班里中游偏上，数学时好时坏，英语是老大难。晚自习后你在走廊灯下多站半小时背单词，那些时刻谈不上悬梁刺股，更像是一种笨拙的、不甘认命的惯性。\n\n高二分科你选了理科，倒不是想得多清楚，只是听人说理科好就业。日子就这么不紧不慢地走，模考排名起起落落，最好冲进过年级前一百，多数时候在两百名上下晃。你隐约知道自己够不着一本线，但二本似乎伸伸手够得到。偶尔周末回家，看见父亲膝盖越来越不好，母亲在镇上超市做了份临时工。你把卷子摊在堂屋那张漆皮剥落的桌上，台灯是那种老式的白炽灯泡，嗡嗡地响。窗外赵官镇的夜安静得只剩虫鸣，而你全部的赌注，不过是三年后那张考卷上能多对几道题。\n\n——也许算不上什么壮志凌云，只是一个北方村庄里的少年，想替自己多挣一条路走。",
+    "15:职校": "二〇〇九年夏天，你没有参加中考，或者说，成绩摆在那里，去县一中是不可能的事。父亲在饭桌上沉默地抽了半根烟，说了句\"学个手艺也中\"，事情便这样定了。母亲托隔壁村嫁到济南的姨表姐打听了几所学校，最终选了德州市里一家职业中专，学数控或者机电——专业名字你其实不大分得清，招生简章上印着车间照片，机床旁站着穿工服的年轻人，看起来像是一条能走通的路。九月开学那天，父亲骑三轮车把你和一床被褥送到镇上，你转客车进城，报到费两千三，是母亲从柜子最里面的铁盒里数出来的。\n\n学校在城郊，宿舍八人间，暖气要到十一月才来。你学的是机电一体化，头一年几乎全是文化课与制图基础，第二年才摸到车床。班里多数人和你一样，来自齐河、平原、夏津各处村镇，十五六岁，说不上热爱什么，只是顺着一个\"学完能进厂\"的朴素许诺往前走。晚自习常有人翻墙出去上网，你偶尔也去，但兜里的钱经不起几次挥霍。周末给家里打电话，母亲总问吃饱没有，你总说吃饱了。日子就这样不快不慢地过着，像齐河平原上永远笔直的公路，看得见远方，只是远方也是平的。",
+    "15:打工": "二〇〇九年夏天，你把没翻完的课本留在课桌里，和村里大你两三岁的几个同乡一起，坐上去天津的长途汽车。车窗外麦收刚过，平原上的热风裹着秸秆灰。你母亲没拦你，她算过账——你弟弟还小，地里那点收成交了提留所剩无几，你父亲在县城工地上搬砖，腰已经不大好了。十五岁，身份证上差几个月不够进正规厂，带你出来的老乡把你塞进一家小五金作坊，管吃住，一个月六百块。你学会了操冲床、打磨毛刺，手上很快添了几道疤。晚上八个人挤一间宿舍，你偶尔想起教室后排那张桌子，但不常想。\n\n往后几年你辗转几个厂，从天津到青岛再到苏州，工资从六百涨到两千多、三千多，踩着那个年代制造业扩张的尾巴。你干过注塑、干过组装线、干过仓库分拣，没有哪一样需要太久就能上手，也没有哪一样让你觉得是自己的。逢年关回家，你把攒下的钱交给母亲，她收进柜子里，预备给你将来盖房说媳妇。村里和你同龄念完高中的人，有的也没考上什么学校，最后一样南下进了厂——你有时想，早出来几年，也不见得亏了什么。只是夜班下了走到厂区门口，路灯把影子拉得很长的时候，你偶尔会有一瞬间说不清楚的感觉，像丢了什么东西，又说不上是什么。",
+    "18:进城": "二〇一二年麦收刚过，你揣着父亲从信用社取出的两千块钱，坐上齐河到济南的大巴，又从济南转火车南下。你没有考上本科，复读一年仍只够一所大专的分数线，但你连那学费也不想再让家里凑了。你去的是苏州，因为同村一个堂哥在那边电子厂待过，说\"进去就能挣钱\"。工业园区的中介所里挤满了和你一样的面孔，短发、黑瘦、背一只蛇皮袋，你报了年龄——十八，刚好够。进的是一家给品牌手机做组装代工的厂，底薪不高，靠加班撑到三千出头。你很快学会了流水线上那几个固定动作，也学会了在十一点熄灯后用刚买的国产智能机连上宿舍微弱的Wi-Fi，刷那些你从前在村里看不到的东西。\n\n头一年新鲜，第二年重复，第三年开始觉得闷。你换过两次厂，工资涨了几百块，始终没攒下太多——房租从六人间换成四人间，吃食从食堂换成偶尔点外卖，手机从五百的换成一千多的，钱就是这样流走的。你偶尔想过学一门技术，手机贴膜、电工证、开叉车，想一想又在下班后的疲倦里搁下了。过年回家时村里人问\"在外面干啥\"，你只说\"在厂里\"，母亲不多问，只是把你带回来的两千块压到柜子最底层。你并没有闯出什么名堂，但你确实离开了——离开本身，在十八岁那年，大约就是你能给自己的最大的事了。",
+    "18:求稳": "高考成绩出来那天，你在镇上网吧查的分数，一本线差了三十多分。父亲在电话里沉默片刻，说\"那就走个二本吧，能上就行\"。你报了省内一所普通院校的土木工程，没什么犹豫——这专业出来好找活，亲戚家表哥就在工地上干，说饿不着。九月你坐大巴去济南，兜里揣着母亲缝在内衬里的两千块钱，那是她在村口小卖部赊账本上算了很久才匀出来的。\n\n大学四年你过得规矩。没逃过几次课，没谈上恋爱，考了二级建造师，用一部联想A789看完了所有能看的免费网课。同寝室有人打英雄联盟打到挂科，有人中途退学去南方闯荡，你替他们捏一把汗，自己却不敢。周末你去兼职发传单，寒假回家帮父亲翻地，日子像齐河冬天的麦田，平整、沉寂、望得到边。2016年毕业，你签了德州本地一家建筑公司，起薪三千二，带五险，没有公积金。母亲在电话里说\"中，稳当就好\"。\n\n你知道这不是什么值得讲述的故事。可你握着那张劳动合同站在宿舍楼下，九月的风吹过来，竟也觉得踏实——像一颗种子落进了土里，不问能开出什么花。",
+    "18:专精": "你没有太多犹豫的余地。2012年夏天，高考成绩出来，不够本科线，父亲在院子里蹲着抽了半盒烟，最终说，要不去学个手艺。你点了头。经人介绍，九月去了济南一家汽修厂，从学徒做起。师傅姓刘，话少，规矩多，你跟着他拆变速箱、换正时链条，手上的油污渗进指纹纹路里，洗不净。同去的老乡有三个，年底走了两个，嫌脏、嫌钱少。你留下来了，倒不全是意志坚定，只是想不出走了还能去哪。\n\n智能手机那年刚铺开，工友们下了班刷段子、打游戏，你也刷，但多看的是修车的教学视频，这算不上什么勤奋叙事，不过是手里拆的东西跟屏幕上的能对上，便多看了几眼。第二年师傅开始让你单独接小活，第三年你能独立处理大部分底盘和发动机常见故障。工资从一千二涨到三千多，汇一部分回家，母亲在电话里说够用了。你知道这条路的天花板不高——不是4S店的技术总监，大概率是十年后自己租个铺面，修附近小区的家用车。但十八岁那年你做的那个决定，至少让你此刻站得住。\n\n日子不传奇，甚至说不上精彩。只是后来你偶尔想，人这一生能扎下根的时刻其实没有几个，而你恰好在最轻浮的年纪，选了那个最笨的姿势。",
+    "23:闯荡": "二〇一七年夏天，你从齐河坐上去济南的大巴，后来又转了趟高铁，落脚在杭州或深圳——总之是一座让你在出站时仰头看了很久的城市。你投了几十份简历，大多石沉大海。\"大公司\"三个字说来轻巧，可你既非985出身，手里也没有拿得出手的项目经历，那些叫得响名字的互联网企业，筛简历时便把你过滤在外了。最终你入职的是一家中等规模的外包公司，工牌上印着某大厂的logo，工位也在那栋漂亮的写字楼里，但你心里清楚，你和正式员工之间隔着一道不写在墙上的线。\n\n你租住在离公司四十分钟地铁的城中村，房间刚好够放一张床和一张折叠桌。加班是常态，需求文档像流水一样压下来，你埋头写代码或做测试，学着用大厂的工具链、适应他们的节奏，偶尔觉得自己确实在进步。工资到手七八千，刨去房租和吃饭，每月能往家里转两千块。母亲在电话里说村东头老李家的儿子在县城买了房，你应了一声，没接话。周末你偶尔打开招聘软件，想着攒够经验就试试转正或者跳一跳，但日子一天天过，这个\"够\"字的刻度似乎总在往后挪。\n\n你并非不努力，只是这座城市里努力的人太多了，多到这件事本身不再构成任何优势。",
+    "23:安稳": "你从济南那边的厂子辞了工，坐大巴回齐河，车窗外是六月麦收后的平原，麦茬地黄得发白。二十三岁，大专或中专学历搁在口袋里没多大分量，在外头漂了两三年，干过车间、跑过销售，攒下的钱刚够还母亲垫的学费。你想安稳，这念头不丢人——村里同龄人多半已经走了这条路。\n\n你托亲戚在县城找了份活，开发区的小厂，或是物流园、建材城里跟人搬货记账。月薪三千出头，管吃不管住，你租在老城区那种八十年代家属院里，单间，公用厕所。日子谈不上好坏，就是一眼能望到头的平坦。过年回家时母亲张罗着相亲，你见了几个姑娘，有的嫌你没房没车，有的你嫌太远。后来定下一个邻镇的，也是普通人家的女孩，她在县城超市做收银。你们商量着攒钱，在县城边上看那种均价四五千的楼盘，首付还差着一截，父亲说再种两年地、再跑一季工，拼一拼能凑上。\n\n日子就这样往前推着走。你偶尔刷手机看见从前在济南合租的室友发朋友圈，有人去了杭州，有人考上了编制，你把屏幕一按也就过去了。齐河的黄河大桥年年有车跑，你站在这头，过不过河其实也没那么要紧了。",
+    "23:自立": "二〇一七年你二十三岁，专科毕业不到两年，在济南干过一阵子销售，攒下的钱刚够几个月房租。你决定自己干，搏一把。那年头身边人都在谈风口，短视频刚起势，微商尾巴还没凉透，你合计着做本地生活类的公众号推广，或者倒一手家乡的农产品。启动资金是找家里凑的一万多块，加上自己那点底子，统共不到三万。你租了间城中村的隔断房，买了台二手笔记本，夜里刷各种创业帖子刷到眼睛发干，白天跑商户谈合作，话术背得滚瓜烂熟，可人家一听你既没公司也没案例，客气一点的递根烟说再看看，不客气的直接把你晾在前台。\n\n三四个月过去，号没做起来几百粉丝，农产品那条线物流和品控你一个人根本兜不住，退货赔了一笔。入秋的时候账上只剩几千块，房东催租的消息和母亲打来问\"咋样了\"的电话往往挤在同一个下午。你没敢跟家里说实话，只讲还在摸索。十一月，你把剩下的存货低价清给了同乡，关掉那个阅读量从未破千的公众号，重新开始投简历。年底你进了一家小公司做新媒体运营，月薪四千五，交完房租水电所剩无几。\n\n这一把没搏出什么名堂来，三万块买了半年教训。但你到底知道了一件事：单枪匹马、没资源没人脉地往上冲，世界多半只是静静看着你，连回绝都懒得郑重其事。日子还要过下去，只是往后再动心思的时候，手会不自觉地摸一摸口袋的深浅。",
+    "27:成家": "二十七岁这年，你经人介绍认识了邻镇一个姑娘，她在县城超市做收银，长相周正，说话轻声细语。你们见了三次面，聊得不算热烈，却也没有什么叫人不舒服的地方。母亲催得紧，说在农村这个年纪再不定下来，往后条件只会往下走。你心里清楚她说的是实情。那年秋天，你借了些钱，加上这几年在外打工攒下的十来万，在齐河县城边上付了一套小两居的首付，彩礼依着当地的行情给了六万八。婚礼办在村里，流水席摆了二十桌，鞭炮声里你觉得一切都快得不太真实。\n\n婚后日子谈不上甜蜜，也说不上苦。你仍旧在德州市里跑，干的是装修或者工地上的活计，她留在县城，后来怀了孕便辞了工作回家待产。房贷每月两千出头，不算重，但也容不得你停下来歇。晚上回到出租屋里刷手机，偶尔看见从前一起玩的同学在南方城市发的动态，你会愣一小会儿，随即锁屏睡去。日子像齐河冬天的麦田，灰扑扑地平展着，望不见尽头，却也实实在在长着什么。",
+    "27:缓婚": "二十七岁这年，你在县城的饭局上被问起\"对象谈了没\"，你端起杯子笑笑，说不急。其实你清楚，不是不急，是算过账。齐河县城的房子要首付十几万，彩礼那几年在镇上已经涨到十万往上，你每月工资到手五六千，存款堪堪够凑个零头。你想再攒两年，把根基打得硬一些，到时候谈起来腰板也直一些。这个念头说不上多宏大，只是一个农村出身的年轻人最朴素的盘算——先把手里的牌码齐了再出。\n\n母亲在电话里不说重话，只是每次挂电话前多一句\"村里谁谁家孩子都会跑了\"。你知道她的意思。赵官镇上你同龄的男孩子，娶妻早的孩子已经进了幼儿园，你在他们中间显得落了单。但你也见过隔壁几个仓促结婚的，婚后两口子在外面租房打工，孩子扔给老人，一年见不了几面，日子过得像两个人各挣各的债。你不想那样。于是你继续守着那份工，加班的时候多接一些，周末偶尔跑跑零活，银行卡上的数字一点一点往上爬。窗外德州的平原四季分明地轮转，你二十七岁的光阴就这样花在了\"再等等\"三个字上——说到底，穷人家的孩子想体面地开始一段生活，本身就要比别人多走几步路。",
+    "27:随缘": "二十七岁这年，你在县城一家小厂里做质检，月薪四千出头。租的房子在老城区，楼下是早餐铺，每天六点半被蒸笼的白汽和油条的气味叫醒。母亲隔三差五打电话来，话题绕不开相亲，你去过几次，有穿碎花裙的小学老师，有在镇卫生院做护士的姑娘，席间你礼貌而无波澜，事后说\"再看看吧\"。不是不想安定，是觉得日子尚在某种惯性里滑行，够不到急切，也腾不出什么热望。\n\n同龄人陆续结了婚，发小付强的孩子已经会喊叔叔。你偶尔刷到从前同学在济南或青岛的朋友圈，写字楼、外滩夜景、精酿啤酒，你看两眼便划走，谈不上羡慕，也确实没什么冲动要去追。周末骑电动车回村，帮父亲把院里的柴火码整齐，晚饭是母亲炖的白菜豆腐，电视放着新闻联播，一切都是旧的样子。你跟自己说随缘，这个词像一枚圆润的石子，握在手心不硌人，只是有时夜里醒来，会隐约觉得它也没什么温度。",
+    "32:守成": "你三十二岁这年，日子的轮廓已经很清晰了。县城边上的厂子或是工地，哪里活儿稳就往哪里靠，薪水谈不上丰厚，四五千块钱，交了房贷、孩子的奶粉钱、老人偶尔的医药费，月底剩不下太多。你不是没想过折腾，前几年也有工友拉你合伙干点什么，你犹豫再三还是没接——家底薄，亏一次就伤筋动骨，这笔账你算得明白。求稳这两个字，不是懒，是怕。\n\n小家撑在齐河县城一套不大的房子里，媳妇在镇上超市做营业员，孩子三四岁，送了村里老人帮带。逢年过节回付庄，院子里的枣树又高了一截，母亲的腰比去年更弯一些，你蹲在檐下抽烟，听父亲絮叨今年麦子价钱，心里清楚这种日子谈不上好也坏不到哪去。三十二岁的北方男人，大多是这个模样——把\"过得去\"三个字当作一种本事，也当作一种忍耐。\n\n偶尔深夜刷手机，看见同龄人晒的生活，你会有一瞬间的怔忡，随即锁屏翻身。明天还得早起，稳当本身也是需要力气的事。",
+    "32:再搏": "三十二岁这年春天，你把攒了两年的七万块钱从银行取出来，在县城商业街盘下一间六十平的门面，做卤肉熟食。这个决定不算突然——你在济南工地上干了将近十年，膝盖落下毛病，去年冬天在架子上差点摔下来，躺在出租屋里看天花板的那几天，你反复想的就是这件事。母亲在电话里没说支持也没说反对，只是沉默了一会儿说，你自己拿主意吧。你媳妇把她娘家给的两万块也添上了，嘴上说的是\"赔了也别怨我\"。\n\n头三个月比你想的难。卤料的配方是跟着手机上的教程调的，味道差着意思，街坊尝一次就不来第二次。你凌晨三点起来煮肉，白天守着冷清的铺子，晚上对着账本发愁。直到夏天你咬牙去临邑一个老师傅那里学了半个月，回来之后才算站住脚——不是多好，是\"还行\"，是街坊愿意隔三差五来称半斤的程度。到年底一算，刨去房租水电，刚够一家三口嚼用，比在工地上挣得少，但膝盖不疼了，晚上能看着孩子写作业。\n\n你换了个活法，只是这活法并没有比从前轻多少。铺子像个笼子，把你从高处的脚手架上挪到了地面，日子仍是一步一步挨着过。偶尔收摊早，你骑电动车去运河边坐一会儿，水面暗沉沉的，和小时候看到的没什么两样。你点上一根烟想，也许明年会好一些吧——这句话你好像每年都对自己说。",
+    "32:归乡": "你回来了。三十二岁，行李不多，一个编织袋，一个拉杆箱，轮子在村口水泥路上响得很清脆。院子里的枣树又粗了一圈，母亲站在门口，没说什么重话，只是把晚饭多炒了一个菜。你在县城找了份不算体面也不算辛苦的活计，有时跑跑建材销售，有时帮人看看厂子里的杂事，收入比在外头少了近一半，但房租这笔钱省下了，吃喝在家，日子倒也过得住。村里人问起来，你只说\"干够了\"，没人再追问——这几年回来的年轻人不算少了。\n\n慢日子并不总是静的。春天帮父亲整那几亩地，化肥涨了价，你在手机上比来比去，最终还是去了镇上老店拉货；夏天傍晚骑电动车去黄河大坝上吹风，河面宽而浑，你坐在坝坡上刷短视频，偶尔也刷到从前在外头一起干活的工友晒加班。秋天有人给你介绍对象，邻村的姑娘，在县城超市做收银，你们见了两面，聊得不算热络，但也没断。日子就是这样，像齐河的冬麦，不声不响地往前拱，谈不上辜负，也谈不上辽阔。\n\n偶尔失眠的夜里，你会承认一件事：回来不全是选择，也是一种算清了自己几斤几两之后的落脚。但院子里有灯亮着，锅里有热汤，母亲的咳嗽你隔一堵墙就能听见——这些东西，在外头那些年，你是拿不到手里的。也许这就够了，也许不够，但你决定先这样过着。",
+    "38:守家": "三十八岁的你，大约已在县城或镇上找到了某种安稳的落脚方式。也许是早年进厂攒下的一点底子，也许是回乡后跑运输、做点小生意，总归不算富裕，但房贷或许已还过大半，孩子该上小学高年级了。你说\"稳住\"，这话本身就带着中年人咽下去的那口气——不是没动过心思，看见同龄人南下或转行，短视频里那些翻身故事也刷过深夜的屏幕。但你清楚自己手里的牌：上有渐老的父母，身体开始查出些小毛病；下有孩子的课外班和将来的中考。你能给这个家的，就是不出岔子。\n\n2032年的鲁西北县镇，产业未必有多大起色，但日子也不至于过不下去。你或许在某个物流园区做调度，或许承包了几十亩流转地种着粮食，收入跟着粮价和补贴走，旱涝之间悬着心。妻子可能在镇上超市或学校食堂做工，两个人的工资拼起来，够一家人嚼用，年底能剩个万把块。周末你骑电动车接孩子放学，路过付庄村老宅，院墙上的爬山虎又长高了一截。你不大回去住了，但过年还是要回的。\n\n守着——这个词到了这个年纪，既是选择，也是认命。你将来或许不会有什么惊天动地的转折，日子像齐河平原上的公路一样笔直地铺向远处，看得见尽头，也看不清尽头。但孩子在长大，父母尚在，屋檐下的灯每晚亮着，这件事本身，或许就是你此生最不动声色的勇敢。",
+    "38:求变": "三十八岁这年，你或许会在某个深夜刷到一条招聘信息，或者听工友说起哪座城市还有机会，心里那根弦又被拨动一下。你大概会认真地想一想——换个城市，换个工种，学一门手艺，或者干脆回齐河去，承包几亩地搞点不一样的营生。你会跟妻子谈，会算账，会在手机备忘录里写下几行潦草的计划。这种念头不是第一次来，但三十八岁的分量和二十八岁不同，你清楚地知道这大概是最后一扇窗能推开的时候了。\n\n最可能的结局是：你确实动了。也许从工地转去学了水电安装，也许从一座城挪到另一座城，也许回了山东在县城边上租个门面。变化是有的，但不是翻天覆地的那种。收入或许涨了一些，或许持平，生活换了个容器，里头装的东西大同小异。你会在新环境里重新适应，重新疲惫，重新找到一种凑合的节奏。偶尔想起这次决定，说不上后悔，也说不上庆幸。\n\n但你到底是动过的人。这件事本身，在往后那些越来越相似的年月里，会像一枚旧车票夹在抽屉深处——不值什么钱，却证明你曾经不甘心就那么坐着。",
+    "50:安度": "五十岁的你，大约已从某个县城或镇上的营生中渐渐退了下来。膝盖不如从前，腰也落下些年轻时干活的旧疾。儿子或女儿在德州市区、或济南、或更远些的地方谋着一份说不上多体面但也稳当的差事，孙辈被送回来，交到你和老伴手中——这在齐河乡间并不稀罕，几乎是一代人重复一代人的轨迹。你将在付庄或赵官镇的楼房里，每日围着孩子的饭食、接送、头疼脑热转圈，日子琐碎而具体。\n\n院里若还有几分地，许已流转出去，每年收一笔不多的租金。你或许会在清晨沿村边的路走走，看看连片的农田上架着什么新式设备，心里算不清那些东西的账，但也不再需要你算了。孙辈喊你一声，你便折回去热牛奶、查作业。逢年过节儿女归来，一家人挤在桌前吃顿饭，席间说几句各自近况，并无太多波澜。你会觉得这就是日子该有的样子——平静，有时寂寥，但尚算安稳。\n\n半生劳碌换来的，不过是这一点踏实的晚景。窗外若有暮色漫上来，你坐在那里看孙儿伏案写字，或许会恍惚想起自己少年时的某个黄昏，想起某条没有走的路——但也只是想想罢了。",
+    "50:了愿": "五十岁那年，孩子大约已成家或在外立住了脚，老屋里重新空旷下来。你会在某个秋天的傍晚，坐在院子里发一会儿呆，忽然想起二十多岁时曾经想做却没做成的事——也许是写点什么，也许是学一样手艺，也许只是想去某个地方看看。那个念想被生计压了二十几年，你以为它早就没了，却发现它只是埋在土里，根还活着。\n\n你大概会试着动手。买一本便宜的帖子练字，或者翻出手机跟着视频学几首曲子，又或者跟老伴商量，趁身体还行，坐一趟火车去看看海。做得不算好，也谈不上有什么成果，邻里间不会有人当回事。但你自己知道，那几个安静的晚上，手里有事情做的时候，胸口有一小块地方是松快的。\n\n往后的日子仍然是齐河的四季轮转，地里的活计渐渐交给机器或别人，膝盖开始不太好。那个重新拾起来的念想，或许坚持了一阵便又搁下了，或许细细碎碎地陪你到很老。无论哪种，它都不会改变什么——你的生活还是那条河，只是河面上多了一点自己放上去的光。这便够了。",
+    "65:知足": "六十五岁那年，你大约已从某处退了下来——若是留在县城或镇上，许是物业、仓管一类不再需要气力的活计，早几年便歇了；若晚年仍在城里儿女身边，则日常不过是接送孙辈上下学，在陌生小区的甬道间认得几张同样操鲁西北口音的面孔。齐河老家的宅基地或许还留着，院墙矮了几分，春天回去时堂屋里有股潮气。你会站在门口看一眼，村里的路早硬化过了，赵官镇的集市缩了一半摊位，付庄的年轻人比你走得更远也更决绝。\n\n你的身体谈不上多好，膝盖和腰是几十年劳作与久坐混合的账，高血压的药每日一粒，已吃得像吃饭一样自然。老伴若还在身边，两人之间的话早磨得很少，但少并非薄。儿女各有各的房贷与疲倦，逢年节聚一聚，饭桌上你多数时候只听，偶尔被问一句便答，语气平和。\"此生足矣\"这四个字，你未必真对谁说出口——北方男人的习惯是把满足与不甘都咽在同一处沉默里。但某个冬天的傍晚，暖气管响着，电视声含混，你靠在沙发上半阖了眼，心里确实淌过这么一句，像是认领，也像是放下。\n\n不算圆满，也没有什么未竟的大遗憾。日子本就是这样走完的——平原上的风吹了一辈子，终归是平的。",
+    "65:遗憾": "六十五岁那年，你大约已从某处退了下来——若是留在县城或镇上，许是物业、仓库、或什么不再需要太多气力的活计；若早年南下打过工，这时候多半也回了齐河，或者跟着儿女迁到德州市区的某个小区里，帮着接送孙辈上下学。膝盖不大好，腰也落下了毛病，这些是北方农村男人到这个年纪几乎逃不过的账。日子不算窘迫，也谈不上宽裕，医保报一部分，剩下的自己担着，你对花钱这件事变得越来越小心。\n\n遗憾是什么呢，你说不太清。也许是年轻时没能多念几年书，也许是某一年本可以留在城里、却因为家里催而回了村，也许是婚姻里某些早已不再提起的沉默。它不是一道伤口，更像衣服里一粒缝不出来的沙——不疼，但你知道它在。傍晚时你偶尔站在阳台上，或者坐在老家院子里那把铁椅上，看天光收尽，会忽然觉得这一生好像很快。快得来不及后悔，也来不及不后悔。\n\n你将继续这样活着。遗憾不会杀死你，甚至不会让你失眠。它只是安静地住在某个角落，像老屋里一盏没人去关的灯。"
+  }
+};
+
+const eraLabel=y=>y<2003?'世纪之交':y<2010?'入世后的高速发展':y<2016?'智能手机普及之初':y<2021?'移动互联网时代':y<=REALITY_YEAR?'近年':'来日';
+const splitPara=t=>t.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+
+// ===== 状态 =====
+let idx=0, curAge=0, saveTree=[];
+const $=id=>document.getElementById(id);
+const stream=$('stream');
+
+function updateTop(){ $('ageLabel').textContent=curAge+' 岁';
+  const y=PLAYER.birthYear+curAge; $('eraLabel').textContent=` · ${y}年 · ${eraLabel(y)}`; }
+function scrollDown(){ setTimeout(()=>stream.scrollTo({top:stream.scrollHeight,behavior:'smooth'}),120); }
+function pushNarr(lines,dim){ lines.forEach((line,i)=>{ const d=document.createElement('div');
+  d.className='narr'+(dim?' dim':''); d.style.animationDelay=(i*0.12)+'s'; d.textContent=line; stream.appendChild(d); }); scrollDown(); }
+function yearTag(txt){ const t=document.createElement('div'); t.className='yeartag'; t.textContent=txt; stream.appendChild(t); }
+
+// ===== 推进 =====
+function advance(){
+  if(idx>=NODES.length){
+    pushNarr(['','人生的来路与去处，到这里都已走过一遍。','可你知道，它本可以是另外的模样——只要当初，某一步换个走法。'],true);
+    return;
+  }
+  const ev=NODES[idx]; const y=PLAYER.birthYear+ev.age;
+  curAge=ev.age; updateTop();
+  yearTag(`${y}年 · 你 ${ev.age} 岁 · ${y>REALITY_YEAR?'来日':ev.type+'节点'}`);
+  showCard(ev);
+}
+
+function showCard(ev){
+  const y=PLAYER.birthYear+ev.age;
+  const card=document.createElement('div'); card.className='event';
+  card.innerHTML=`<div class="ico">${ev.icon}</div><div class="etitle">${ev.title}</div>
+    <div class="ebody">${BAKED.scenes[ev.age]||''}</div>
+    <span class="open-btn">${ev.open} ›</span>`;
+  card.querySelector('.open-btn').onclick=()=>openDecision(ev);
+  stream.appendChild(card); scrollDown();
+}
+
+function openDecision(ev){
+  $('dQ').textContent=ev.q;
+  const box=$('dOpts'); box.innerHTML='';
+  ev.opts.forEach(o=>{ const el=document.createElement('div'); el.className='opt';
+    el.innerHTML=`${o.t}<span class="sub">${o.sub}</span>`;
+    el.onclick=()=>choose(ev,o); box.appendChild(el); });
+  $('decision').classList.add('show');
+}
+
+function choose(ev,o){
+  $('decision').classList.remove('show');
+  const y=PLAYER.birthYear+ev.age;
+  saveTree.push({age:ev.age,year:y,title:ev.title,choice:o.t,key:o.key,idx});
+  renderTree();
+  pushNarr([`▸ 你选了这条路：${o.t}`],true);
+  const lines=splitPara(BAKED.narrations[`${ev.age}:${o.key}`]||'（这一段的光阴，尚未被记下。）');
+  pushNarrSeg(lines,{age:ev.age,year:y});
+  idx++;
+  addContinue();
+}
+
+// 可纠正/未来只读 的叙述段
+function pushNarrSeg(lines,meta){
+  const seg=document.createElement('div'); seg.className='ai-seg';
+  lines.forEach((line,i)=>{ const d=document.createElement('div'); d.className='narr';
+    d.style.animationDelay=(i*0.12)+'s'; d.textContent=line; seg.appendChild(d); });
+  if(meta.year<=REALITY_YEAR){
+    const c=document.createElement('div'); c.className='correct-link';
+    c.textContent='✎ 此事并非如此……';
+    c.onclick=()=>{ if(seg.querySelector('.future-deny'))return;
+      const d=document.createElement('div'); d.className='future-deny';
+      d.textContent='（体验版中，纠正暂未开放。完整版里，你可以在此说出真实发生的事，让往后的人生顺着真相重写。）';
+      seg.appendChild(d); setTimeout(()=>d.classList.add('show'),20); };
+    seg.appendChild(c);
+  }else{
+    const tag=document.createElement('div'); tag.className='future-tag';
+    tag.textContent='— 来日之事，不过一卷尚未写就的猜想 —'; seg.appendChild(tag);
+    const c=document.createElement('div'); c.className='correct-link';
+    c.textContent='✎ 我想改写此处';
+    c.onclick=()=>{ if(seg.querySelector('.future-deny'))return;
+      const d=document.createElement('div'); d.className='future-deny';
+      d.textContent='人世万般来日，皆不在掌心裁量之中。';
+      seg.appendChild(d); setTimeout(()=>d.classList.add('show'),20); };
+    seg.appendChild(c);
+  }
+  stream.appendChild(seg); scrollDown();
+}
+
+function addContinue(){
+  const old=document.querySelector('.continue-btn'); if(old)old.remove();
+  if(idx>=NODES.length){
+    pushNarr(['','人生的来路与去处，到这里都已走过一遍。','它本可以是另外的模样——只要当初，某一步换个走法。','（点右上"人生树"，回到任意路口，换一种活法。）'],true);
+    return;
+  }
+  const b=document.createElement('div'); b.className='event continue-btn';
+  b.style.borderColor='rgba(168,192,255,.3)';
+  b.innerHTML=`<span class="open-btn" style="background:rgba(168,192,255,.16);border-color:rgba(168,192,255,.5);color:var(--line)">往下走吧，岁月不等人 ›</span>`;
+  b.querySelector('.open-btn').onclick=()=>{ b.remove(); advance(); };
+  stream.appendChild(b); scrollDown();
+}
+
+// ===== 人生树 + 时光穿梭 =====
+function renderTree(){
+  const body=$('treeBody'); body.innerHTML='';
+  if(!saveTree.length){ body.innerHTML='<div class="hint">人生开始后，每个路口会停驻在这里。</div>'; return; }
+  saveTree.forEach((n,i)=>{ const el=document.createElement('div');
+    el.className='node'+(i===saveTree.length-1?' current':'');
+    el.innerHTML=`<div class="dot"></div><div><div class="nage">${n.year}年 · ${n.age}岁 · ${n.title}</div>
+      <div class="nchoice">${n.choice}</div><div class="nback">↶ 回到这里，换一种活法</div></div>`;
+    el.onclick=()=>timeTravel(n); body.appendChild(el); });
+}
+function timeTravel(node){
+  $('tree').classList.remove('show');
+  idx=node.idx;
+  saveTree=saveTree.slice(0,node.idx);
+  curAge=node.age; updateTop();
+  stream.innerHTML='';
+  pushNarr([`⟲ 时光倒流，回到 ${node.year}年，你 ${node.age}岁那时。`,`有些路口，值得重新站一次。`],true);
+  setTimeout(()=>{ yearTag(`${node.year}年 · 你 ${node.age}岁 · 旧地重临`); showCard(NODES[idx]); },600);
+  renderTree();
+}
+
+$('openTree').onclick=()=>{ renderTree(); $('tree').classList.add('show'); };
+$('closeTree').onclick=()=>$('tree').classList.remove('show');
+
+// ===== 开场 =====
+$('startBtn').onclick=()=>{
+  const intro=$('intro'); intro.style.opacity='0';
+  setTimeout(()=>intro.style.display='none',800);
+  updateTop();
+  pushNarr([`${PLAYER.birthYear}年，你降生在${PLAYER.place}。${PLAYER.family}。`,
+    `起点由不得人挑拣。你的一生，自这一年起，徐徐铺开。`]);
+  setTimeout(addContinue,1400);
+};
+</script>
+</body>
+</html>

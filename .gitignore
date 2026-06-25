@@ -1,0 +1,24 @@
+# 含API key / 内网地址，绝不上传
+server.js
+gen-offline.js
+ai.js
+prototype.js
+baked-data.json
+# 联网版原型（依赖server）
+如果-B原型.html
+游戏.html
+原型.html
+场景*.html
+动画*.html
+玩家*.html
+视频*.html
+写实*.html
+# 设计文档与素材
+*.md
+*.png
+*.mp4
+_vidcheck*.html
+.playwright-mcp/
+场景图/
+.DS_Store
+方向A第一人称.html
