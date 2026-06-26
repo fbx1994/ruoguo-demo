@@ -14,10 +14,15 @@
     display:flex;flex-direction:column;position:relative;box-shadow:0 0 60px rgba(0,0,0,.5);}
 
   /* 视频场景层 —— 平时窄带，路口涨满 */
-  #videoband{position:relative;width:100%;height:128px;overflow:hidden;flex-shrink:0;
-    background:#000;transition:height .9s cubic-bezier(.7,0,.2,1);z-index:15;}
-  #videoband.full{height:62vh;}
+  #videoband{position:relative;width:100%;height:64px;overflow:hidden;flex-shrink:0;
+    background:#000;transition:height .55s cubic-bezier(.7,0,.2,1);z-index:15;cursor:pointer;}
+  #videoband.full{height:56vh;}
   #videoband video{width:100%;height:100%;object-fit:cover;display:block;}
+  /* 展开/收起提示箭头 */
+  #videoband .vtoggle{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);z-index:4;
+    font-size:12px;color:rgba(232,237,255,.7);text-shadow:0 1px 6px rgba(0,0,0,.9);
+    pointer-events:none;letter-spacing:2px;transition:.3s;}
+  #videoband.full .vtoggle{bottom:auto;top:12px;left:50%;transform:translateX(-50%);}
   #videoband::after{content:'';position:absolute;left:0;right:0;bottom:0;height:46%;
     background:linear-gradient(to top,#0e0f17 2%,rgba(14,15,23,.6) 40%,transparent);pointer-events:none;}
   #videoband .vcaption{position:absolute;left:18px;bottom:14px;right:18px;z-index:2;
@@ -223,6 +228,7 @@
     <div class="vyear" id="vYear"></div>
     <div class="vcaption" id="vCaption"></div>
     <div class="vsound" id="vSound" title="环境音">🔇</div>
+    <div class="vtoggle" id="vToggle">▽ 展开画面</div>
   </div>
   <div id="book"><div id="booktrack"></div></div>
   <div id="bookNav">
@@ -385,9 +391,16 @@ function setSceneVideo(key,year){ const vid=$('sceneVideo');
     vid.onerror=()=>{ for(const k of FALLBACK_ORDER){ if(k!==key&&SCENE_VIDEOS[k]){ vid.src=SCENE_VIDEOS[k].src; vid.load(); vid.play().catch(()=>{}); break; } } };
     vid.src=(SCENE_VIDEOS[key]||SCENE_VIDEOS.default).src; vid.muted=!_soundOn; vid.load(); vid.play().catch(()=>{}); }
   if(year!=null) $('vYear').textContent=`${year}年 · ${eraLabel(year)}`; }
-function expandVideo(cap){ $('videoband').classList.add('full'); $('vCaption').textContent=cap||''; }
-function shrinkVideo(){ $('videoband').classList.remove('full'); $('vCaption').textContent=''; }
-$('vSound').onclick=()=>{ _soundOn=!_soundOn; const vid=$('sceneVideo'); vid.muted=!_soundOn;
+// 视频大小完全由用户控制：expand/shrink 只更新字幕，不再强制改变高度
+function expandVideo(cap){ $('vCaption').textContent=cap||''; }
+function shrinkVideo(){ $('vCaption').textContent=''; }
+// 点击视频条：展开大画面 / 收起小条
+function toggleVideo(){
+  const vb=$('videoband'), full=vb.classList.toggle('full');
+  $('vToggle').textContent = full ? '△ 收起画面' : '▽ 展开画面';
+}
+$('videoband').addEventListener('click', e=>{ if(e.target.id==='vSound') return; toggleVideo(); });
+$('vSound').onclick=(e)=>{ e.stopPropagation(); _soundOn=!_soundOn; const vid=$('sceneVideo'); vid.muted=!_soundOn;
   if(_soundOn) vid.play().catch(()=>{}); $('vSound').textContent=_soundOn?'🔊':'🔇'; };
 // ===== 数据加载 =====
 let BAKED=null;
