@@ -3,7 +3,11 @@ server.js
 gen-offline.js
 ai.js
 prototype.js
-baked-data.json
+state.js
+clock.js
+video.js
+account.js
+_archive/
 # 联网版原型（依赖server）
 如果-B原型.html
 游戏.html
@@ -16,9 +20,22 @@ baked-data.json
 # 设计文档与素材
 *.md
 *.png
-*.mp4
 _vidcheck*.html
 .playwright-mcp/
 场景图/
 .DS_Store
 方向A第一人称.html
+offline-*.png
+# 离线版工作副本（部署只用 index.html，避免仓库存两份相同文件）
+如果-离线体验版.html
+
+# —— 离线版部署所需（单文件 index.html + 下列两项），放行 ——
+# baked-data.json：纯文字内容（无 key），离线版数据源
+baked-data.json
+!baked-data.json
+# 视频：默认忽略所有 mp4，仅放行离线版场景视频
+*.mp4
+assets/
+!assets/
+!assets/video/
+!assets/video/*.mp4
